@@ -5,14 +5,9 @@ const modalFooter = document.querySelector(".modal-footer")
 
 
 let products = []
-const cart = []
-
-function deleteProduct(){
-    alert("Mygtukas veikia")
-}
+let cart = []
 
 function shoppingCart() {
-    const modal = document.getElementById("myModal");
     const products = document.querySelector(".products");
     console.log(cart)
     
@@ -25,31 +20,17 @@ function shoppingCart() {
         `
             <img src="${x.image}">
             <p class="bold">${x.price} $</p>
+            <div>Quantity:${x.quantity}</div>
             <p>${x.title}</p>
-            <button class="delete"> X </button>
+            <button id="${x.id}" class="delete"> X </button>
         `
         products.append(product)
     })
 
     const deleteBtns = document.querySelectorAll(".delete")
-    deleteBtns.forEach(x => x.onclick = deleteProduct)
+    deleteBtns.forEach(x => x.onclick = removeFromCart)
 
-    const btn = document.getElementById("cartBtn")
-    const span = document.getElementsByClassName("close")[0];
 
-    btn.onclick = function() {
-    modal.style.display = "block";
-    }
-
-    span.onclick = function() {
-    modal.style.display = "none";
-    }
-
-    window.onclick = function(event) {
-    if (event.target == modal) {
-        modal.style.display = "none";
-    }
-    }
         
 }
 
@@ -57,7 +38,7 @@ function updateToolbar() {
     toolbarTotal.innerHTML = "Total: " + cart.length
 
     let totalPrice = 0
-    cart.map(x => totalPrice += x.price)
+    cart.map(x => totalPrice += x.price * x.quantity)
 
     toolbarPrice.innerHTML = `Price: ${totalPrice.toFixed(2)} $`
 
@@ -70,11 +51,29 @@ function updateToolbar() {
     `
 }
 
+
+function removeFromCart(e) {
+    const {id} = e.target
+    cart = cart.filter(x => x.id !== Number(id))
+    shoppingCart()
+    updateToolbar()
+}
+
 // FIND PRODUCT, PUSH TO CART
 function addToCart(e) {
     const id = e.target.id
     const current = products.find(x => x.id === Number(id))
-    cart.push(current)
+
+    const inCart = cart.find(x => x.id === Number(id))
+
+    if(inCart){
+        const productIndex = cart.findIndex(x => x.id === Number(id))
+        cart[productIndex].quantity++
+    } else {
+        current.quantity = 1
+        cart.push(current)
+    }
+
     updateToolbar()
     shoppingCart()
 }
@@ -97,7 +96,7 @@ function appendProducts(arr) {
     })
 
     const buttons = document.querySelectorAll(".addCart")
-    buttons.forEach(x => x.onclick = addToCart)
+    buttons.forEach(x => x.onclick = addToCart)   
 }
 
 // GET PRODUCTS FROM API
@@ -107,3 +106,24 @@ function appendProducts(arr) {
     products = res
     appendProducts(res)
 })()
+
+
+// SHOPPING CART LOGIC
+const modal = document.getElementById("myModal");
+
+const btn = document.getElementById("cartBtn")
+const span = document.getElementsByClassName("close")[0];
+
+btn.onclick = function() {
+modal.style.display = "block";
+}
+
+span.onclick = function() {
+modal.style.display = "none";
+}
+
+window.onclick = function(event) {
+if (event.target == modal) {
+    modal.style.display = "none";
+}
+}
